@@ -1,0 +1,62 @@
+{
+	"name": "bowie-lang",
+	"displayName": "Bowie",
+	"description": "Syntax highlighting and autocompletion for the Bowie language (.bow)",
+	"version": "1.0.0",
+	"publisher": "bowie-lang",
+	"engines": {
+		"vscode": "^1.75.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Snippets"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bowie-lang/bowie"
+	},
+	"icon": "icons/bowie.png",
+	"main": "./extension.js",
+	"contributes": {
+		"languages": [
+			{
+				"id": "bowie",
+				"aliases": [
+					"Bowie",
+					"bow"
+				],
+				"extensions": [
+					".bow"
+				],
+				"configuration": "./language-configuration.json",
+				"icon": {
+					"dark": "./icons/bowie.png",
+					"light": "./icons/bowie.png"
+				}
+			}
+		],
+		"grammars": [
+			{
+				"language": "bowie",
+				"scopeName": "source.bow",
+				"path": "./syntaxes/bowie.tmLanguage.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "bowie",
+				"path": "./snippets/bowie.json"
+			}
+		],
+		"configuration": {
+			"title": "Bowie",
+			"properties": {
+				"bowie.interpreter.path": {
+					"type": "string",
+					"default": "bowie",
+					"description": "Path to the bowie interpreter binary."
+				}
+			}
+		}
+	}
+}

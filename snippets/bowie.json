@@ -1,0 +1,123 @@
+{
+	"Let variable": {
+		"prefix": "let",
+		"body": ["let ${1:name} = $2"],
+		"description": "Declare a variable"
+	},
+	"Function definition": {
+		"prefix": "fn",
+		"body": ["fn ${1:name}(${2:args}) {", "\t$0", "}"],
+		"description": "Define a named function"
+	},
+	"Anonymous function": {
+		"prefix": "afn",
+		"body": ["fn(${1:args}) { $0 }"],
+		"description": "Anonymous function expression"
+	},
+	"If statement": {
+		"prefix": "if",
+		"body": ["if ${1:condition} {", "\t$0", "}"],
+		"description": "If statement"
+	},
+	"If-else statement": {
+		"prefix": "ife",
+		"body": ["if ${1:condition} {", "\t$2", "} else {", "\t$0", "}"],
+		"description": "If-else statement"
+	},
+	"While loop": {
+		"prefix": "while",
+		"body": ["while ${1:condition} {", "\t$0", "}"],
+		"description": "While loop"
+	},
+	"For-in loop": {
+		"prefix": "for",
+		"body": ["for ${1:item} in ${2:collection} {", "\t$0", "}"],
+		"description": "For-in loop"
+	},
+	"HTTP server": {
+		"prefix": "server",
+		"body": [
+			"let ${1:server} = create_server(${2:8080})",
+			"",
+			"route(${1:server}, \"GET\", \"/${3:path}\", fn(req) {",
+			"\treturn {",
+			"\t\t\"status\": 200,",
+			"\t\t\"body\": json_encode({$4}),",
+			"\t\t\"headers\": {\"Content-Type\": \"application/json\"}",
+			"\t}",
+			"})",
+			"",
+			"serve(${1:server})"
+		],
+		"description": "HTTP server boilerplate"
+	},
+	"Route handler": {
+		"prefix": "route",
+		"body": [
+			"route(${1:server}, \"${2|GET,POST,PUT,DELETE|}\", \"/${3:path}\", fn(req) {",
+			"\treturn {",
+			"\t\t\"status\": ${4:200},",
+			"\t\t\"body\": $5,",
+			"\t\t\"headers\": {\"Content-Type\": \"application/json\"}",
+			"\t}",
+			"})"
+		],
+		"description": "HTTP route handler"
+	},
+	"JSON response": {
+		"prefix": "jres",
+		"body": [
+			"{",
+			"\t\"status\": ${1:200},",
+			"\t\"body\": json_encode($2),",
+			"\t\"headers\": {\"Content-Type\": \"application/json\"}",
+			"}"
+		],
+		"description": "JSON HTTP response hash"
+	},
+	"JSON encode": {
+		"prefix": "je",
+		"body": ["json_encode($1)"],
+		"description": "Encode value to JSON string"
+	},
+	"JSON decode": {
+		"prefix": "jd",
+		"body": ["json_decode($1)"],
+		"description": "Decode JSON string to value"
+	},
+	"println": {
+		"prefix": "pl",
+		"body": ["println($1)"],
+		"description": "Print with newline"
+	},
+	"Read environment variable": {
+		"prefix": "env",
+		"body": ["let ${1:val} = env_or(\"${2:VAR}\", \"${3:default}\")"],
+		"description": "Read env variable with default"
+	},
+	"Read file": {
+		"prefix": "rf",
+		"body": ["let ${1:content} = read_file(\"${2:path}\")"],
+		"description": "Read file contents"
+	},
+	"Write file": {
+		"prefix": "wf",
+		"body": ["write_file(\"${1:path}\", ${2:content})"],
+		"description": "Write content to file"
+	},
+	"Hash map": {
+		"prefix": "hash",
+		"body": ["let ${1:map} = {", "\t\"${2:key}\": ${3:value}", "}"],
+		"description": "Hash map literal"
+	},
+	"Array": {
+		"prefix": "arr",
+		"body": ["let ${1:items} = [$2]"],
+		"description": "Array literal"
+	},
+	"Assert": {
+		"prefix": "assert",
+		"body": ["assert($1, \"${2:assertion failed}\")"],
+		"description": "Assert expression is truthy"
+	}
+}
