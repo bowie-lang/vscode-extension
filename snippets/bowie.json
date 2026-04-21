@@ -4,6 +4,11 @@
 		"body": ["let ${1:name} = $2"],
 		"description": "Declare a variable"
 	},
+	"Const variable": {
+		"prefix": "const",
+		"body": ["const ${1:name} = $2"],
+		"description": "Declare an immutable variable"
+	},
 	"Function definition": {
 		"prefix": "fn",
 		"body": ["fn ${1:name}(${2:args}) {", "\t$0", "}"],
@@ -33,6 +38,66 @@
 		"prefix": "for",
 		"body": ["for ${1:item} in ${2:collection} {", "\t$0", "}"],
 		"description": "For-in loop"
+	},
+	"Async function definition": {
+		"prefix": "asyncfn",
+		"body": ["async fn ${1:name}(${2:args}) {", "\t$0", "}"],
+		"description": "Define an async function"
+	},
+	"Await expression": {
+		"prefix": "await",
+		"body": ["await ${1:promise}"],
+		"description": "Await an async result"
+	},
+	"Try-catch": {
+		"prefix": "try",
+		"body": [
+			"try {",
+			"\t$1",
+			"} catch (${2:err}) {",
+			"\t$0",
+			"}"
+		],
+		"description": "Try-catch block"
+	},
+	"Try-catch-finally": {
+		"prefix": "tryf",
+		"body": [
+			"try {",
+			"\t$1",
+			"} catch (${2:err}) {",
+			"\t$3",
+			"} finally {",
+			"\t$0",
+			"}"
+		],
+		"description": "Try-catch-finally block"
+	},
+	"Throw error": {
+		"prefix": "throw",
+		"body": ["throw ${1:error}"],
+		"description": "Throw an error"
+	},
+	"Fetch request": {
+		"prefix": "fetch",
+		"body": [
+			"let ${1:resp} = fetch(\"${2:https://example.com}\", {",
+			"\t\"method\": \"${3:GET}\",",
+			"\t\"headers\": {\"Content-Type\": \"application/json\"},",
+			"\t\"body\": ${4:json_encode({})}",
+			"})"
+		],
+		"description": "HTTP fetch call with options"
+	},
+	"Break": {
+		"prefix": "break",
+		"body": ["break"],
+		"description": "Break from loop"
+	},
+	"Continue": {
+		"prefix": "continue",
+		"body": ["continue"],
+		"description": "Continue next loop iteration"
 	},
 	"HTTP server": {
 		"prefix": "server",

@@ -95,6 +95,11 @@ const BUILTINS = [
     sig: "index_of(array|string, value)",
     doc: "Return the first index of value, or -1 if not found.",
   },
+  {
+    name: "lookup",
+    sig: "lookup(value, key, expected)",
+    doc: "Recursively look up key in nested values and return the first matching expected value or null.",
+  },
 
   /* String */
   {
@@ -207,6 +212,11 @@ const BUILTINS = [
 
   /* HTTP */
   {
+    name: "fetch",
+    sig: "fetch(url, options?)",
+    doc: "Perform an HTTP request. options may include method, headers, and body.",
+  },
+  {
     name: "create_server",
     sig: "create_server(port, on_listen?)",
     doc: "Create a new HTTP server on the given port. Optional on_listen is called once when listening (like Express app.listen); if omitted, a default message is printed.",
@@ -237,6 +247,7 @@ const BUILTINS = [
 
 const KEYWORDS = [
   "let",
+  "const",
   "fn",
   "return",
   "if",
@@ -244,6 +255,18 @@ const KEYWORDS = [
   "while",
   "for",
   "in",
+  "import",
+  "export",
+  "as",
+  "use",
+  "break",
+  "continue",
+  "async",
+  "await",
+  "try",
+  "catch",
+  "finally",
+  "throw",
   "true",
   "false",
   "null",

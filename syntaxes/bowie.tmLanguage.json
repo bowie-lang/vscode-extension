@@ -7,6 +7,7 @@
 		{ "include": "#comment" },
 		{ "include": "#string" },
 		{ "include": "#number" },
+		{ "include": "#exception-keyword" },
 		{ "include": "#keyword" },
 		{ "include": "#constant" },
 		{ "include": "#builtin" },
@@ -47,15 +48,20 @@
 			]
 		},
 
+		"exception-keyword": {
+			"name": "keyword.control.exception.bowie",
+			"match": "\\b(try|catch|finally|throw)\\b"
+		},
+
 		"keyword": {
 			"patterns": [
 				{
 					"name": "keyword.control.bowie",
-					"match": "\\b(if|else|while|for|in|return)\\b"
+					"match": "\\b(if|else|while|for|in|return|break|continue|try|catch|finally|throw|await)\\b"
 				},
 				{
 					"name": "keyword.other.bowie",
-					"match": "\\b(let|fn|import|export|as|use)\\b"
+					"match": "\\b(let|const|fn|import|export|as|use|async)\\b"
 				}
 			]
 		},
@@ -75,7 +81,7 @@
 
 		"builtin": {
 			"name": "support.function.builtin.bowie",
-			"match": "\\b(print|println|printf|sprintf|eprint|input|str|int|float|bool|type|len|push|pop|keys|values|range|slice|index_of|split|join|trim|upper|lower|contains|replace|starts_with|ends_with|floor|ceil|abs|sqrt|pow|max|min|env|env_or|read_file|write_file|append_file|json_encode|json_decode|create_server|route|serve|exit|assert|is_null)\\b(?=\\s*\\()"
+			"match": "\\b(print|println|printf|sprintf|eprint|input|str|int|float|bool|type|len|push|pop|keys|values|range|slice|index_of|lookup|split|join|trim|upper|lower|contains|replace|starts_with|ends_with|floor|ceil|abs|sqrt|pow|max|min|env|env_or|read_file|write_file|append_file|json_encode|json_decode|fetch|create_server|route|serve|exit|assert|is_null)\\b(?=\\s*\\()"
 		},
 
 		"function-def": {
@@ -87,12 +93,21 @@
 						"1": { "name": "keyword.other.bowie" },
 						"2": { "name": "entity.name.function.bowie" }
 					}
+				},
+				{
+					"comment": "named async function: async fn foo(",
+					"match": "\\b(async)\\s+(fn)\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()",
+					"captures": {
+						"1": { "name": "keyword.other.bowie" },
+						"2": { "name": "keyword.other.bowie" },
+						"3": { "name": "entity.name.function.bowie" }
+					}
 				}
 			]
 		},
 
 		"function-call": {
-			"match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()",
+			"match": "\\b(?!(?:if|else|while|for|in|return|break|continue|try|catch|finally|throw|await|let|const|fn|import|export|as|use|async|true|false|null)\\b)([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()",
 			"captures": {
 				"1": { "name": "entity.name.function.call.bowie" }
 			}
@@ -114,7 +129,7 @@
 				},
 				{
 					"name": "keyword.operator.arithmetic.bowie",
-					"match": "\\+|-|\\*|/|%"
+					"match": "\\+\\+|--|\\+|-|\\*|/|%"
 				}
 			]
 		},
@@ -135,14 +150,14 @@
 				},
 				{
 					"name": "punctuation.separator.bowie",
-					"match": "[,:]"
+					"match": "[,:;.]"
 				}
 			]
 		},
 
 		"variable": {
 			"name": "variable.other.bowie",
-			"match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+			"match": "\\b(?!(?:if|else|while|for|in|return|break|continue|try|catch|finally|throw|await|let|const|fn|import|export|as|use|async|true|false|null)\\b)[a-zA-Z_][a-zA-Z0-9_]*\\b"
 		}
 	}
 }
