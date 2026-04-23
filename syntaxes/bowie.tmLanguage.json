@@ -81,7 +81,7 @@
 
 		"builtin": {
 			"name": "support.function.builtin.bowie",
-			"match": "\\b(print|println|printf|sprintf|eprint|input|str|int|float|bool|type|len|push|pop|keys|values|range|slice|index_of|lookup|split|join|trim|upper|lower|contains|replace|starts_with|ends_with|floor|ceil|abs|sqrt|pow|max|min|env|env_or|read_file|write_file|append_file|json_encode|json_decode|fetch|create_server|route|serve|exit|assert|is_null)\\b(?=\\s*\\()"
+			"match": "\\b(print|println|printf|sprintf|vsprintf|eprint|input|str|int|float|bool|type|error_type|is_error_type|len|push|pop|keys|values|range|slice|index_of|lookup|split|join|trim|upper|lower|contains|replace|starts_with|ends_with|floor|ceil|abs|sqrt|pow|max|min|env|env_or|read_file|write_file|append_file|json_encode|json_decode|fetch|create_server|route|serve|pg_connect|pg_close|pg_query|exit|assert|is_null)\\b(?=\\s*\\()"
 		},
 
 		"function-def": {
@@ -130,6 +130,10 @@
 				{
 					"name": "keyword.operator.arithmetic.bowie",
 					"match": "\\+\\+|--|\\+|-|\\*|/|%"
+				},
+				{
+					"name": "keyword.operator.spread.bowie",
+					"match": "\\.\\.\\."
 				}
 			]
 		},

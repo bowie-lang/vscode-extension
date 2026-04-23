@@ -184,5 +184,78 @@
 		"prefix": "assert",
 		"body": ["assert($1, \"${2:assertion failed}\")"],
 		"description": "Assert expression is truthy"
+	},
+
+	"Import module": {
+		"prefix": "imp",
+		"body": ["import \"${1:path}\""],
+		"description": "Import a module"
+	},
+	"Import with alias": {
+		"prefix": "impa",
+		"body": ["import \"${1:path}\" as ${2:name}"],
+		"description": "Import module with alias"
+	},
+	"Import named": {
+		"prefix": "impu",
+		"body": ["import \"${1:path}\" use ${2:name}"],
+		"description": "Import named exports from module"
+	},
+	"Export declaration": {
+		"prefix": "exp",
+		"body": ["export ${1:fn ${2:name}(${3:args}) {\n\t$0\n}}"],
+		"description": "Export a declaration"
+	},
+
+	"PostgreSQL connect": {
+		"prefix": "pgconn",
+		"body": ["let ${1:conn} = pg_connect(\"${2:host=localhost dbname=mydb user=postgres}\")"],
+		"description": "Connect to PostgreSQL"
+	},
+	"PostgreSQL query": {
+		"prefix": "pgq",
+		"body": ["let ${1:rows} = pg_query(${2:conn}, \"${3:SELECT * FROM ${4:table}}\")"],
+		"description": "Execute a PostgreSQL query"
+	},
+	"PostgreSQL boilerplate": {
+		"prefix": "pg",
+		"body": [
+			"let ${1:conn} = pg_connect(\"${2:host=localhost dbname=mydb user=postgres}\")",
+			"",
+			"let ${3:rows} = pg_query(${1:conn}, \"${4:SELECT * FROM ${5:table}}\")",
+			"",
+			"pg_close(${1:conn})"
+		],
+		"description": "PostgreSQL connect, query, close"
+	},
+
+	"sprintf": {
+		"prefix": "sf",
+		"body": ["let ${1:s} = sprintf(\"${2:%s}\", $3)"],
+		"description": "Format string with sprintf"
+	},
+	"eprint": {
+		"prefix": "ep",
+		"body": ["eprint(${1:value})"],
+		"description": "Print to stderr"
+	},
+	"Append file": {
+		"prefix": "af",
+		"body": ["append_file(\"${1:path}\", ${2:content})"],
+		"description": "Append content to file"
+	},
+	"Range loop": {
+		"prefix": "forr",
+		"body": ["for ${1:i} in range(${2:end}) {", "\t$0", "}"],
+		"description": "For loop over a range"
+	},
+	"Error type check": {
+		"prefix": "errtype",
+		"body": [
+			"if is_error_type(${1:err}, \"${2:type}\") {",
+			"\t$0",
+			"}"
+		],
+		"description": "Check error type"
 	}
 }
