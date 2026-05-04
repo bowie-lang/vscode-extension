@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const vscode = require("vscode");
 
 /* All built-in functions with their signatures and doc strings */
@@ -291,6 +293,342 @@ function wordCompletions(document, position) {
     });
 }
 
+function splitComment(line) {
+  let inString = false;
+  let quote = "";
+  let escaped = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === quote) {
+        inString = false;
+        quote = "";
+      }
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      inString = true;
+      quote = ch;
+      continue;
+    }
+
+    if (ch === "#") {
+      return {
+        code: line.slice(0, i).trim(),
+        comment: line.slice(i).trim(),
+      };
+    }
+  }
+
+  return { code: line.trim(), comment: "" };
+}
+
+function normalizeCodeSpacing(code) {
+  if (!code) return "";
+
+  let out = "";
+  let inString = false;
+  let quote = "";
+  let escaped = false;
+  let prevToken = "";
+
+  for (let i = 0; i < code.length; i += 1) {
+    const ch = code[i];
+    const next = code[i + 1] || "";
+
+    if (inString) {
+      out += ch;
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === quote) {
+        inString = false;
+        quote = "";
+      }
+      prevToken = "str";
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      out += ch;
+      inString = true;
+      quote = ch;
+      prevToken = "str";
+      continue;
+    }
+
+    if (/\s/.test(ch)) {
+      if (
+        out.length > 0 &&
+        out[out.length - 1] !== " " &&
+        !["(", "[", "{"].includes(out[out.length - 1])
+      ) {
+        out += " ";
+      }
+      continue;
+    }
+
+    const twoCharOp = ch + next;
+    if (
+      ["==", "!=", "<=", ">=", "&&", "||", "+=", "-=", "*=", "/=", "%="].includes(
+        twoCharOp,
+      )
+    ) {
+      out = out.trimEnd() + " " + twoCharOp + " ";
+      i += 1;
+      prevToken = "op";
+      continue;
+    }
+
+    if ([",", ";", ")", "]", "}"].includes(ch)) {
+      out = out.trimEnd() + ch;
+      if (next && ![",", ";", ")", "]", "}"].includes(next)) {
+        out += " ";
+      }
+      prevToken = ch;
+      continue;
+    }
+
+    if (["(", "[", "{"].includes(ch)) {
+      out = out.trimEnd() + ch;
+      if (
+        ch === "{" &&
+        out.length > 1 &&
+        ![" ", "{", "[", "(", "\n"].includes(out[out.length - 2])
+      ) {
+        out = out.slice(0, -1) + " {";
+      }
+      prevToken = ch;
+      continue;
+    }
+
+    if (ch === ":") {
+      out = out.trimEnd() + ": ";
+      prevToken = ":";
+      continue;
+    }
+
+    if (["=", "+", "-", "*", "/", "%", "<", ">", "?"].includes(ch)) {
+      if (ch === "-" && ["", "(", "[", "{", ",", ":", "op"].includes(prevToken)) {
+        out = out.trimEnd() + "-";
+      } else if (
+        ch === "!" &&
+        next !== "=" &&
+        ["", "(", "[", "{", ",", ":", "op"].includes(prevToken)
+      ) {
+        out = out.trimEnd() + "!";
+      } else {
+        out = out.trimEnd() + " " + ch + " ";
+      }
+      prevToken = "op";
+      continue;
+    }
+
+    if (ch === "!" && next !== "=") {
+      out = out.trimEnd() + "!";
+      prevToken = "op";
+      continue;
+    }
+
+    out += ch;
+    prevToken = "id";
+  }
+
+  return out.trim();
+}
+
+function countDelimiters(code) {
+  let opens = 0;
+  let closes = 0;
+  let inString = false;
+  let quote = "";
+  let escaped = false;
+
+  for (let i = 0; i < code.length; i += 1) {
+    const ch = code[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === quote) {
+        inString = false;
+        quote = "";
+      }
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      inString = true;
+      quote = ch;
+      continue;
+    }
+
+    if (ch === "{" || ch === "[") opens += 1;
+    if (ch === "}" || ch === "]") closes += 1;
+  }
+
+  return { opens, closes };
+}
+
+function leadingClosers(code) {
+  let count = 0;
+  for (const ch of code) {
+    if (ch === "}" || ch === "]") {
+      count += 1;
+      continue;
+    }
+    if (/\s/.test(ch) || ch === "," || ch === ";") {
+      continue;
+    }
+    break;
+  }
+  return count;
+}
+
+function splitTrailingClosers(code) {
+  const match = code.match(/^(.*\S)([)\]}]+)$/);
+  if (!match) return null;
+  if (!/[\]}]/.test(match[2])) return null;
+  return { body: match[1], closers: match[2] };
+}
+
+const DEFAULT_FORMAT_CONFIG = {
+  indentStyle: "spaces",
+  indentSize: 4,
+  maxConsecutiveBlankLines: 1,
+  spaceBeforeInlineComment: 2,
+  finalNewline: true,
+};
+
+function normalizeFormatConfig(raw) {
+  const cfg = { ...DEFAULT_FORMAT_CONFIG };
+  if (!raw || typeof raw !== "object") return cfg;
+
+  if (raw.indentStyle === "spaces" || raw.indentStyle === "tabs") {
+    cfg.indentStyle = raw.indentStyle;
+  }
+  if (Number.isInteger(raw.indentSize) && raw.indentSize >= 0) {
+    cfg.indentSize = raw.indentSize;
+  }
+  if (
+    Number.isInteger(raw.maxConsecutiveBlankLines) &&
+    raw.maxConsecutiveBlankLines >= 0
+  ) {
+    cfg.maxConsecutiveBlankLines = raw.maxConsecutiveBlankLines;
+  }
+  if (
+    Number.isInteger(raw.spaceBeforeInlineComment) &&
+    raw.spaceBeforeInlineComment >= 0
+  ) {
+    cfg.spaceBeforeInlineComment = raw.spaceBeforeInlineComment;
+  }
+  if (typeof raw.finalNewline === "boolean") {
+    cfg.finalNewline = raw.finalNewline;
+  }
+  return cfg;
+}
+
+function makeIndent(level, config) {
+  const safeLevel = Math.max(0, level);
+  if (config.indentStyle === "tabs") {
+    return "\t".repeat(safeLevel);
+  }
+  return " ".repeat(safeLevel * config.indentSize);
+}
+
+function findNearestBowieJson(startDir) {
+  let dir = startDir;
+  while (true) {
+    const candidate = path.join(dir, "bowie.json");
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+function readFormatConfigForDocument(document) {
+  const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+  const startDir = path.dirname(document.uri.fsPath);
+  const jsonPath = findNearestBowieJson(
+    folder ? path.resolve(startDir) : startDir,
+  );
+  if (!jsonPath) return DEFAULT_FORMAT_CONFIG;
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+    return normalizeFormatConfig(parsed.format);
+  } catch {
+    return DEFAULT_FORMAT_CONFIG;
+  }
+}
+
+function formatBowie(text, config = DEFAULT_FORMAT_CONFIG) {
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const out = [];
+  let indentLevel = 0;
+  let consecutiveEmpty = 0;
+
+  for (const rawLine of lines) {
+    const trimmedLine = rawLine.trim();
+    if (!trimmedLine) {
+      if (consecutiveEmpty < config.maxConsecutiveBlankLines) {
+        out.push("");
+      }
+      consecutiveEmpty += 1;
+      continue;
+    }
+
+    consecutiveEmpty = 0;
+    const { code, comment } = splitComment(trimmedLine);
+    const dedent = Math.min(indentLevel, leadingClosers(code));
+    const currentIndent = makeIndent(indentLevel - dedent, config);
+    const normalizedCode = normalizeCodeSpacing(code);
+
+    const trailing = normalizedCode ? splitTrailingClosers(normalizedCode) : null;
+    if (trailing) {
+      let lineText = currentIndent + trailing.body;
+      if (comment) {
+        const commentGap = " ".repeat(config.spaceBeforeInlineComment);
+        lineText += commentGap + comment;
+      }
+      out.push(lineText.trimEnd());
+
+      const closerDedent = /^[}\]]/.test(trailing.closers) ? 1 : 0;
+      const closerIndent = makeIndent(indentLevel - closerDedent, config);
+      out.push((closerIndent + trailing.closers).trimEnd());
+    } else {
+      let lineText = currentIndent;
+      if (normalizedCode) {
+        lineText += normalizedCode;
+      }
+      if (comment) {
+        const commentGap = " ".repeat(config.spaceBeforeInlineComment);
+        lineText += normalizedCode ? commentGap + comment : comment;
+      }
+      out.push(lineText.trimEnd());
+    }
+
+    const { opens, closes } = countDelimiters(code);
+    indentLevel = Math.max(0, indentLevel + opens - closes);
+  }
+
+  const normalized = out.join("\n").trimEnd();
+  return config.finalNewline ? normalized + "\n" : normalized;
+}
+
 function activate(context) {
   /* ---- Completion provider ---- */
   const completionProvider = vscode.languages.registerCompletionItemProvider(
@@ -392,10 +730,31 @@ function activate(context) {
     ",",
   );
 
+  /* ---- Formatter provider ---- */
+  const formattingProvider = vscode.languages.registerDocumentFormattingEditProvider(
+    "bowie",
+    {
+      provideDocumentFormattingEdits(document) {
+        const original = document.getText();
+        const config = readFormatConfigForDocument(document);
+        const formatted = formatBowie(original, config);
+        if (formatted === original) {
+          return [];
+        }
+
+        const lastLine = document.lineCount - 1;
+        const lastChar = document.lineAt(lastLine).text.length;
+        const fullRange = new vscode.Range(0, 0, lastLine, lastChar);
+        return [vscode.TextEdit.replace(fullRange, formatted)];
+      },
+    },
+  );
+
   context.subscriptions.push(
     completionProvider,
     hoverProvider,
     sigHelpProvider,
+    formattingProvider,
   );
 }
 

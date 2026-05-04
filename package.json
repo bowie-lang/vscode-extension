@@ -17,6 +17,9 @@
 	},
 	"icon": "icons/bowie.png",
 	"main": "./extension.js",
+	"activationEvents": [
+		"onLanguage:bowie"
+	],
 	"contributes": {
 		"languages": [
 			{

@@ -9,6 +9,7 @@ VS Code extension for the [Bowie](https://github.com/bowie-lang/bowie) programmi
 - **Hover docs** — signature and description for every built-in on hover
 - **Signature help** — parameter hints while typing function calls
 - **Snippets** — common patterns ready to expand
+- **Strict formatter** — deterministic document formatting via VS Code's `Format Document`, configurable from `bowie.json > format`
 
 ## Snippets
 
